@@ -1,4 +1,9 @@
 #!/bin/bash
+
+if [ ! -d "src" ]; then
+	mkdir src
+fi
+
 g++ -O0 -g3 -Wall -c -std=c++11 -fmessage-length=0 -o "src/FileCompressor.o" "../src/FileCompressor.cpp" 
 g++ -O0 -g3 -Wall -c -std=c++11 -fmessage-length=0 -o "src/main.o" "../src/main.cpp" 
 g++ -O0 -g3 -Wall -c -std=c++11 -fmessage-length=0 -o "src/FileDecompressor.o" "../src/FileDecompressor.cpp" 

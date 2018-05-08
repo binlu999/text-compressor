@@ -10,92 +10,110 @@
 #include <vector>
 #include <fstream>
 #include <sstream>
+#include <chrono>
+
+#include "Trade.h"
+#include "FileCompressor.h"
+#include "FileDecompressor.h"
 
 using namespace std;
 
-void compress(string inputfile, string outputfile) {
+int compress(string inputfile, string outputfile) {
 
-	cout << "Compressing input file " << inputfile << endl;
+	FileCompressor compressor = FileCompressor(inputfile, outputfile);
+	try {
+		compressor.compresse();
+		return 0;
+	} catch (const char* msg) {
+		cout << msg << endl;
+		return 1;
+	}
+}
 
-	/*
-	 std::ifstream file(inputfile);
-	 /*
-	 std::string str;
-	 while (std::getline(file, str)) {
-	 cout << str;
-	 }
-	 */
-	std::ifstream file(inputfile);
-	std::string line;
+int decompress(string inputfile, string outputfile) {
 
-	while (std::getline(file, line)) {
-		cout << "LINE:" << line << endl;
+	FileDeompressor decompressor = FileDeompressor(inputfile, outputfile);
+	try {
+		decompressor.decompresse();
+		return 0;
+	} catch (const char* msg) {
+		cout << msg << endl;
+		return 1;
+	}
+}
 
+int test(string inputfile) {
 
-		std::stringstream linestream(line);
+	string compressed = inputfile + ".compressed";
+	long long inputSize = 0;
 
-		std::string data;
-		int val1;
-		int val2;
+	//Test FileCompressor class
+	FileCompressor compressor = FileCompressor(inputfile, compressed);
+	try {
+		const auto startTime = std::chrono::system_clock::now();
+		compressor.compresse();
+		const auto endTime = std::chrono::system_clock::now();
+		std::chrono::duration<double> elapsedSeconds = endTime - startTime;
+		inputSize = compressor.getInputFileSize();
+		long long compressedSize = compressor.getOutputFileSize();
+		cout << "Input file " << inputfile << " size is "
+				<< to_string(inputSize) << endl;
+		cout << "Compressed output file " << compressed << " size is "
+				<< to_string(compressedSize) << endl;
+		double ratio = ((double) (inputSize - compressedSize) / inputSize)
+				* 100;
+		cout << "Compression ratio: " << ratio << '%' << endl;
+		cout << "Compression time: " << elapsedSeconds.count() << " seconds" << endl;
 
-		std::getline(linestream, data, ',');
-		cout << data << endl;
-
+	} catch (const char* msg) {
+		cout << msg << endl;
+		cout << "Compress " << inputfile << "failed" << endl;
+		return 1;
 	}
 
-	std::ifstream infile(inputfile, fstream::in);
-	if (infile.is_open()) {
-		std::string ticker;
-		char exchange;
-		char side;
-		char condition;
-		int time;
-		int reptime;
-		std::string price;
-		std::string size;
-		char c;
+	//Test FileDecompressor class
 
-		cout << "Read input file " << inputfile << endl;
-
-		while (infile >> ticker >> c && c == ',')
-			//>> c >> exchange >> c >> side >> c >> condition
-			//>> c >> time >> c >> reptime >> c >> price >> c >> size)
-			//&& c == ',')
-			std::cout << ticker << "|" << endl;
-		/*
-		 << exchange << "|" << side << "|"
-		 << condition << "|" << time << "|" << reptime << "|"
-		 << price << "|" << size << "\n";
-		 */
+	string decompressed = inputfile + ".decompressed";
+	FileDeompressor decompressor = FileDeompressor(compressed, decompressed);
+	try {
+		const auto startTime = std::chrono::system_clock::now();
+		decompressor.decompresse();
+		const auto endTime = std::chrono::system_clock::now();
+		std::chrono::duration<double> elapsedSeconds = endTime - startTime;
+		long long decompressedSize = decompressor.getOutputFileSize();
+		cout << "Input file " << inputfile << " size is "
+				<< to_string(inputSize) << endl;
+		cout << "Decompressed output file " << decompressed << " size is "
+				<< to_string(decompressedSize) << endl;
+		if (inputSize == decompressedSize)
+			cout
+					<< "Compress/Decompress successful since decompressed file has same size as input file"
+					<< endl;
+		else
+			cout
+					<< "Compress/Decompress failed since decompressed file has different size as input file"
+					<< endl;
+		cout << "Deompression time: " << elapsedSeconds.count() << " seconds" << endl;
+	} catch (const char* msg) {
+		cout << msg << endl;
+		return 1;
 	}
-	infile.close();
-
-	unsigned char nextChar;
-	fstream fin(inputfile, fstream::in);
-
-	if (!fin) {
-		cout << "Unable to open file " << inputfile;
-		exit(1); // terminate with error
-	}
-
-	// first, calculate the frequencies of each character
-	while (fin >> noskipws >> nextChar) {
-		cout << nextChar;
-	}
-
-	cout << "Compressed input file " << inputfile << endl;
-
+	return 0;
 }
 
 int main(int argc, char* argv[]) {
 	std::vector<std::string> args(argv, argv + argc);
 	if (args.size() == 4 && args[1] == "-c") {
-		compress(args[2], args[3]);
-	} else if (args.size() == 3 && args[1] == "-d") {
-
+		return compress(args[2], args[3]);
+	} else if (args.size() == 4 && args[1] == "-d") {
+		return decompress(args[2], args[3]);
+	} else if (args.size() == 3 && args[1] == "-t") {
+		return test(args[2]);
 	} else {
 		cout << "Usage: " << argv[0]
 				<< " [-c|-d] [input_file_name] [output_file_name] " << endl;
+		cout << "Or " << argv[0] << " -t [input_file_name] " << endl;
 	}
-	return 0;
+	return 9;
+
 }

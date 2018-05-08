@@ -1,5 +1,4 @@
 #!/bin/bash
-
 g++ -O0 -g3 -Wall -c -fmessage-length=0 -o "src/FileCompressor.o" "../src/FileCompressor.cpp" 
 g++ -O0 -g3 -Wall -c -fmessage-length=0 -o "src/main.o" "../src/main.cpp" 
 g++ -O0 -g3 -Wall -c -fmessage-length=0 -o "src/FileDecompressor.o" "../src/FileDecompressor.cpp" 
